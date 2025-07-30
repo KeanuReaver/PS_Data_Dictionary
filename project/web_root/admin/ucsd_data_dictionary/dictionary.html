@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>UCSD - Data Dictionary</title>
+
+    ~[wc:commonscripts]
+
+    <link href="/images/css/screen.css" rel="stylesheet" media="screen">
+    <link href="/images/css/print.css" rel="stylesheet" media="print">
+    <link href="/images/css/ucsdDataDictionary/style.css" rel="stylesheet" media="screen">
+</head>
+<body>
+    ~[wc:admin_header_css]
+    <!-- breadcrumb start <a href="first_link" target="_top">first</a> &gt; <a href="second_link" target="_top">Second</a> &gt; here-->UCSD - Data Dictionary<!-- breadcrumb end -->
+    <!-- start of main menu and content -->
+    ~[wc:admin_navigation_css]
+    <!-- Start of Page -->
+    <!-- start of content area -->
+    ~[if#AdminOnly.~[directory]=admin]
+        <div    data-require-path="/scripts/components/ucsd_data_dictionary/index.js"
+                data-module-name="ucsdDDModule"
+                data-ng-controller="DictionaryCtrl"
+                class="data-dictionary-container"
+                data-ng-cloak>
+            <div class="dictionary-sidebar">
+                <div class="sidebar-header">
+                    Schema Categories
+                </div>
+                <div class="sidebar-scroll">
+                    <div class="loading-indicator" style="text-align: center">
+                        <div    data-ng-show="dictionaryData.length === 0" 
+                                class="progress medium" 
+                                data-pss-wait-spinner="medium"
+                                style="text-align: center">
+                        </div>
+                    </div>
+                    
+                    <ul>
+                        <li data-ng-repeat="cat in dictionaryData | orderBy:'category'" class="nav-category-items">
+                            <a href="" data-ng-click="toggleCategory(cat.category)">
+                                {{ cat.category }}
+                            </a>
+                            <ul data-ng-if="selectedCategory === cat.category"
+                                class="cat-sublist">
+                                <li data-ng-repeat="table in cat.assocTables"
+                                    data-ng-class="{ 'selected-table':
+                                                     selectedTable && selectedTable.table_name === table.table_name }">
+                                    <a href="" data-ng-click="selectTable(table.table_name)">
+                                        {{ table.table_name }}
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="dictionary-main-content">
+                <div class="dictionary-header">
+                    <span class="dictionary-header-h">
+                        <span data-ng-show="selectedTable">
+                            <button class="btn-back"
+                                    data-ng-click="goBack()"
+                                    data-ng-disabled="!navStack.length">
+                                ← Back
+                            </button>
+                        </span>
+                        <span data-ng-show="!selectedCategory && !selectedTable && !searchResults">
+                            UCSD Data Dictionary
+                        </span>
+                        <span data-ng-show="selectedCategory && !selectedTable && !searchResults">
+                            {{ selectedCategory || 'UCSD Data Dictionary' }}
+                        </span>
+                        <span data-ng-show="selectedTable || searchResults">
+                            {{ selectedTable.table_title || 'UCSD Data Dictionary' }}
+                        </span>
+                        <h1></h1>
+                    </span>
+                    <span class="dictionary-search-bar">
+                        <input  type="text"
+                                list="dictSuggestions"
+                                data-ng-model="searchQuery"
+                                placeholder="Search tables/fields …"
+                                data-ng-change="stripContext(); updateSuggestions()"
+                                data-ng-keydown="$event.keyCode === 13 && performSearch()">
+                        <button type="button" data-ng-click="performSearch()">Search</button>
+                    
+                         <!--HTML5 autocomplete list -->
+                        <datalist id="dictSuggestions">
+                            <option data-ng-repeat="s in suggestions" value="{{ s }}"></option>
+                        </datalist>
+                    </span>
+                </div>
+                <div class="loading-indicator" style="text-align: center">
+                    <div data-ng-show="dictionaryData.length === 0" class="progress huge" data-pss-wait-spinner="huge" style="text-align: center"></div>
+                </div>
+    
+                <div    data-ng-if="!selectedTable && !searchResults 
+                            && !(selectedCategory && !selectedTable && !searchResults)" 
+                        class="dictionary-display-content">
+                    <p>Select a schema or search for a table/field</p>
+                </div>
+    
+                <div    data-ng-if="selectedCategory && !selectedTable && !searchResults"
+                        class="dictionary-display-content">
+                    <ul>
+                        <li data-ng-repeat="table in getSelectedCategoryTables()" class="list-table-space">
+                            <a href="" data-ng-click="selectTable(table.table_name)">
+                                <strong>{{ table.table_name }}</strong>
+                            </a> 
+                            <p>{{ table.table_desc }}</p>
+                        </li>
+                    </ul>
+                </div>
+    
+                <div data-ng-show="selectedTable" class="dictionary-display-content">
+                    <p>{{ selectedTable.table_desc }}</p>
+                    <div data-ng-show="selectedTable.extended_by.length !== 0" class="extended-by-block">
+                        <button type="button" data-ng-click="showExtensions = !showExtensions">
+                            {{ showExtensions ? 'Hide' : 'Show' }} {{ selectedTable.extended_by.length }} Extension Table{{ selectedTable.extended_by.length === 1 ? '' : 's' }}
+                        </button>
+                    
+                        <div class="extension-grid" data-ng-show="showExtensions">
+                            <a data-ng-repeat="ext_table in selectedTable.extended_by"
+                               data-ng-click="selectTable(ext_table)"
+                               class="extension-link">
+                               {{ ext_table }}
+                            </a>
+                        </div>
+                    </div>
+                    <table class="grid">
+                        <thead>
+                            <tr>
+                                <th>Field</th>
+                                <th>Version</th>
+                                <th>Data Type</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr data-ng-repeat="field in selectedTable.fields|orderBy:dynamicOrderBy:reverseSort">
+                                <td>
+                                    <span data-ng-show="!field.parent_table">{{ field.field_name }}</span>
+                                    <a      data-ng-show="field.parent_table"
+                                            data-ng-click="selectTable(field.parent_table, true)"
+                                            tooltip-follow
+                                            data-tooltip-title="Parent: {{ field.parent_table }}<br>Parent Index: {{ field.parent_table_index }}">
+                                        {{ field.field_name }}
+                                    </a>
+                                </td>
+                                <td>{{ field.field_version }}</td>
+                                <td>{{ field.field_data_type }}</td>
+                                <td>
+                                    <p data-ng-show="field.field_desc">{{ field.field_desc }}</p>
+                                    <p data-ng-show="field.parent_table">
+                                        <span>
+                                            <em data-ng-show="!field.parent_table_index">Referenced Table:</em><em data-ng-show="field.parent_table_index">Extending:</em> <strong>{{ field.parent_table }}</strong>
+                                        </span>
+                                        <span data-ng-show="field.parent_table_index">&nbsp;<em>Referenced Table Index:</em> <strong>{{ field.parent_table_index }}</strong></span>
+                                    </p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+    
+                <div data-ng-if="searchResults" class="dictionary-display-content">
+                    <h3 data-ng-if="searchResults.tables.length">Table Matches</h3>
+                    <ul>
+                        <li data-ng-repeat="tbl in searchResults.tables" class="list-table-space">
+                            <span>
+                                <a href="" data-ng-click="selectTable(tbl.table_name, true)">
+                                    <strong>{{ tbl.table_name }}</strong>
+                                </a>:
+                                <em>{{ tbl.table_cat }}</em>
+                            </span>
+                            <p>{{ tbl.table_desc }}</p>
+                        </li>
+                    </ul>
+                
+                    <h3 data-ng-if="searchResults.fields.length">Field Matches</h3>
+                    <ul>
+                        <li data-ng-repeat="tbl in searchResults.fields" class="list-table-space">
+                            <span>
+                                <a href="" data-ng-click="selectTable(tbl.table_name, true)">
+                                    <strong>{{ tbl.table_name }}</strong>
+                                </a>:
+                                <em>{{ tbl.table_cat }}</em>
+                            </span>
+                            <p>{{ tbl.table_desc }}</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    [/if#AdminOnly]
+    <!-- end of content area -->
+    ~[wc:admin_footer_css]
+</body>
+</html>

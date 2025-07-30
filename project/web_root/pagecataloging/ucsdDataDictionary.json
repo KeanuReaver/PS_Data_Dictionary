@@ -1,0 +1,13 @@
+{
+    "pages": [
+        {
+            "htmlID": "nav-ucsd-idd",
+            "title": "UCSD Data Dictionary",
+            "pageURL": "/admin/ucsd_data_dictionary/dictionary.html",
+            "version": "1.0",
+            "contextType": "main",
+            "sortOrder": 5000,
+            "parentHTMLID": "navApplicationsSection"
+        }
+    ]
+}

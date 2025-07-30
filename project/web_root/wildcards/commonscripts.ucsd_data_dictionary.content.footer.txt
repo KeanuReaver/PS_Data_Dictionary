@@ -1,0 +1,25 @@
+~[if#AdminOnly.~[directory]=admin]
+    ~[if#checkUCSDDD.security.pageviewormod=/admin/ucsd_data_dictionary/dictionary.html]
+        <script type="text/x-custom-template" id="ucsd-data-dictionary">
+            <div id="help-menu-style">
+                <a href="/admin/ucsd_data_dictionary/dictionary.html" title="UCSD Data Dictionary" ,="" accesskey="?" target="_blank">UCSD Data Dictionary</a>
+            </div>
+        </script>
+        
+        <script>
+            $j(() => {
+                $j("#btnHelpPlusCompliance").append($j("#ucsd-data-dictionary").html());
+            });
+        </script>
+        <style>
+            #help-menu-style {
+                text-align: start;
+                height: 28px;
+                width: 100%;
+                padding: 4px 4px 8px;
+                padding-inline-start: 4px;
+                white-space: nowrap;
+            }    
+        </style>
+    [/if#checkUCSDDD]
+[/if#AdminOnly]
