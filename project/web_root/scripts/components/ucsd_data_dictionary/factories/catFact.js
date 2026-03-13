@@ -139,10 +139,10 @@ define(function(require) {
                 cat: 'State / Reporting',
                 test: n =>
                     n.startsWith('state')
-                    | n.startsWith('sif_')
-                    | n.startsWith('s_')
-                    | n.startsWith('pssr_')
-                    | n.startsWith('cst_')
+                    || n.startsWith('sif_')
+                    || n.startsWith('s_')
+                    || n.startsWith('pssr_')
+                    || n.startsWith('cst_')
             },
             {
                 cat: 'Staff',
